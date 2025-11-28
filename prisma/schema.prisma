@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  password        String
+  role            String    @default("USER")
+  phone           String?
+  address         String?
+  organizationName String?
+  profileImage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  orders          Order[]
+  sentMessages    Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  comments        Comment[]
+}
+
+model Product {
+  id            String          @id @default(cuid())
+  name          String
+  type          String
+  price         Float
+  quantity      Int
+  location      String
+  description   String?
+  imageUrl      String?
+  branchId      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  branch        Branch?         @relation(fields: [branchId], references: [id])
+  orders        Order[]
+  advertisements Advertisement[]
+  comments      Comment[]
+}
+
+model Order {
+  id         String    @id @default(cuid())
+  userId     String
+  productId  String
+  quantity   Int
+  totalPrice Float
+  status     String    @default("PENDING")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+}
+
+model Advertisement {
+  id        String   @id @default(cuid())
+  message   String
+  productId String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  location  String
+  phone     String?
+  email     String?
+  manager   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  message    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String?
+  orderId   String?
+  comment   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id              String   @id @default(cuid())
+  name            String
+  email           String
+  phone           String?
+  organizationName String?
+  message         String
+  isResolved      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
