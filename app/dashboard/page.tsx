@@ -3,6 +3,35 @@
 import { useEffect, useState } from 'react';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
+function AdvertisementsList() {
+  const [ads, setAds] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/advertisements')
+      .then(res => res.json())
+      .then(data => setAds(data.advertisements || []))
+      .catch(err => console.error('Failed to fetch ads:', err));
+  }, []);
+
+  if (ads.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      {ads.map((ad) => (
+        <div key={ad.id} className="flex items-start space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <span className="text-2xl">📢</span>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{ad.message}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              {ad.product.name} - {ad.product.location}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -27,9 +56,23 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/dashboard/stats');
       const data = await res.json();
+      
+      // Ensure recentOrders is always an array
+      if (data && !data.recentOrders) {
+        data.recentOrders = [];
+      }
+      
       setStats(data);
     } catch (error) {
       console.error('Failed to fetch stats');
+      // Set default stats to prevent errors
+      setStats({
+        totalProducts: 0,
+        totalOrders: 0,
+        totalUsers: 0,
+        totalRevenue: 0,
+        recentOrders: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -39,7 +82,7 @@ export default function DashboardPage() {
     return <div>Loading...</div>;
   }
 
-  const orderStatusData = stats.recentOrders.reduce((acc: any, order: any) => {
+  const orderStatusData = (stats.recentOrders || []).reduce((acc: any, order: any) => {
     acc[order.status] = (acc[order.status] || 0) + 1;
     return acc;
   }, {});
@@ -138,8 +181,17 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {user?.role === 'USER' && (
+        <div className="card mb-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            📢 Latest Announcements
+          </h2>
+          <AdvertisementsList />
+        </div>
+      )}
+
       <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
           {user?.role === 'USER' ? 'My Recent Orders' : 'Recent Orders'}
         </h2>
         <div className="overflow-x-auto">
@@ -169,7 +221,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {stats.recentOrders.map((order: any) => (
+              {(stats.recentOrders || []).map((order: any) => (
                 <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 text-sm">{order.product.name}</td>
                   {user?.role !== 'USER' && (

@@ -58,18 +58,26 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('Submitting profile data:', formData);
+      
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error('Failed to update profile');
+      const responseData = await res.json();
+      console.log('Profile update response:', responseData);
+
+      if (!res.ok) {
+        throw new Error(responseData.error || 'Failed to update profile');
+      }
 
       toast.success('Profile updated successfully!');
       setEditing(false);
       fetchUser();
     } catch (error: any) {
+      console.error('Profile update error:', error);
       toast.error(error.message);
     }
   };
@@ -217,21 +225,19 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {user?.role === 'USER' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Organization Name
-                  </label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={formData.organizationName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, organizationName: e.target.value })
-                    }
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Organization Name
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  value={formData.organizationName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, organizationName: e.target.value })
+                  }
+                />
+              </div>
 
               <div className="flex gap-4">
                 <button type="submit" className="flex-1 btn btn-primary">
@@ -276,16 +282,14 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              {user?.role === 'USER' && (
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Organization
-                  </p>
-                  <p className="text-base font-medium text-gray-900 dark:text-white">
-                    {user?.organizationName || 'Not provided'}
-                  </p>
-                </div>
-              )}
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Organization
+                </p>
+                <p className="text-base font-medium text-gray-900 dark:text-white">
+                  {user?.organizationName || 'Not provided'}
+                </p>
+              </div>
 
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Role</p>

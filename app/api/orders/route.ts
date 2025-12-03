@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
 
     const where: any = {};
 
+    // Always filter by userId for regular users
     if (session.role === 'USER') {
       where.userId = session.userId;
     }
@@ -17,6 +18,9 @@ export async function GET(req: NextRequest) {
     if (status) {
       where.status = status;
     }
+
+    console.log('Orders API - Session:', { role: session.role, userId: session.userId });
+    console.log('Orders API - Where clause:', where);
 
     const orders = await prisma.order.findMany({
       where,
@@ -33,8 +37,11 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    console.log('Orders API - Found orders:', orders.length);
+
     return NextResponse.json({ orders });
   } catch (error: any) {
+    console.error('Orders API error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

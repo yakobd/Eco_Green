@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
         name: true,
         email: true,
         role: true,
+        phone: true,
+        address: true,
+        organizationName: true,
+        profileImage: true,
+        isApproved: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -68,12 +73,14 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role,
+        isApproved: true, // Auto-approve users created by super admin
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        isApproved: true,
         createdAt: true,
       },
     });

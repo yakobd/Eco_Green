@@ -42,13 +42,8 @@ export default function MessagesPage() {
 
   const fetchUsers = async () => {
     try {
-      // For regular users, fetch admins. For admins, fetch all users
-      let endpoint = '/api/users';
-      if (currentUser?.role === 'USER') {
-        endpoint = '/api/users?role=ADMIN,SUPER_ADMIN';
-      }
-      
-      const res = await fetch(endpoint);
+      // Fetch all users
+      const res = await fetch('/api/users');
       const data = await res.json();
       
       // Filter out current user from the list
@@ -68,11 +63,21 @@ export default function MessagesPage() {
       setMessages(data.messages || []);
       
       // Mark messages as read
-      data.messages?.forEach((msg: any) => {
-        if (msg.receiverId === currentUser?.id && !msg.isRead) {
-          fetch(`/api/messages/${msg.id}/read`, { method: 'PATCH' });
-        }
-      });
+      const unreadMessages = data.messages?.filter(
+        (msg: any) => msg.receiverId === currentUser?.id && !msg.isRead
+      );
+      
+      if (unreadMessages && unreadMessages.length > 0) {
+        // Mark each unread message as read
+        await Promise.all(
+          unreadMessages.map((msg: any) =>
+            fetch(`/api/messages/${msg.id}/read`, { method: 'PATCH' })
+          )
+        );
+        
+        // Trigger sidebar refresh
+        window.dispatchEvent(new Event('refreshSidebarCounts'));
+      }
     } catch (error) {
       console.error('Failed to fetch messages');
     }
@@ -172,7 +177,7 @@ export default function MessagesPage() {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                   placeholder="Type a message..."
                   className="input flex-1"
                 />

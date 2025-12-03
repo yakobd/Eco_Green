@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if user is approved (admins and super admins are auto-approved)
+    if (!user.isApproved && user.role === 'USER') {
+      return NextResponse.json(
+        { error: 'Your account is pending approval. Please wait for admin approval.' },
+        { status: 403 }
+      );
+    }
+
     const token = signToken({
       userId: user.id,
       email: user.email,

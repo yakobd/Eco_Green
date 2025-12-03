@@ -4,12 +4,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 
 interface NavbarProps {
   user: {
     name: string;
     email: string;
     role: string;
+    profileImage?: string;
   };
 }
 
@@ -44,6 +46,7 @@ export default function Navbar({ user }: NavbarProps) {
           </div>
 
           <div className="flex items-center space-x-4">
+            <NotificationBell />
             <ThemeToggle />
             
             <Link

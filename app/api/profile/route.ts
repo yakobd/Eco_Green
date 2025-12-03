@@ -7,15 +7,18 @@ export async function PUT(req: NextRequest) {
     const session = await requireAuth();
     const data = await req.json();
 
+    console.log('Profile update request for user:', session.userId);
+    console.log('Update data:', data);
+
     const user = await prisma.user.update({
       where: { id: session.userId },
       data: {
         name: data.name,
         email: data.email,
-        phone: data.phone,
-        address: data.address,
-        organizationName: data.organizationName,
-        profileImage: data.profileImage,
+        phone: data.phone || null,
+        address: data.address || null,
+        organizationName: data.organizationName || null,
+        profileImage: data.profileImage || null,
       },
       select: {
         id: true,
@@ -29,8 +32,10 @@ export async function PUT(req: NextRequest) {
       },
     });
 
+    console.log('Profile updated successfully:', user);
     return NextResponse.json({ user });
   } catch (error: any) {
+    console.error('Profile update error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

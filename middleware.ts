@@ -10,8 +10,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Public routes
-  if (pathname === '/login' || pathname === '/') {
+  // Public routes - allow landing page and login
+  if (pathname === '/login') {
+    return NextResponse.next();
+  }
+
+  // Root path - check if user is logged in
+  if (pathname === '/') {
+    if (token) {
+      // Logged in users go to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    // Not logged in - show landing page
     return NextResponse.next();
   }
 

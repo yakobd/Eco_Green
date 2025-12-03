@@ -20,6 +20,11 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        phone: true,
+        address: true,
+        organizationName: true,
+        profileImage: true,
+        isApproved: true,
         createdAt: true,
       },
     });

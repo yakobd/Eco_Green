@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, phone, organizationName } = await req.json();
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -26,30 +26,35 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
+        phone,
+        organizationName,
         role: 'USER',
+        isApproved: false,
       },
     });
 
-    const token = signToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
+    // Notify super admins about new registration
+    const superAdmins = await prisma.user.findMany({
+      where: { role: 'SUPER_ADMIN' },
     });
 
-    const cookieStore = await cookies();
-    cookieStore.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    for (const admin of superAdmins) {
+      await prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type: 'NEW_USER_REGISTRATION',
+          title: 'New User Registration',
+          message: `${user.name} from ${user.organizationName} has registered and is awaiting approval.`,
+        },
+      });
+    }
 
     return NextResponse.json({
+      message: 'Registration successful. Please wait for admin approval.',
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (error) {

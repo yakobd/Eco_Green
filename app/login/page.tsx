@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const searchParams = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
+    phone: '',
+    organizationName: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,13 +39,23 @@ export default function LoginPage() {
         throw new Error(data.error || 'Something went wrong');
       }
 
-      toast.success(isLogin ? 'Login successful! Redirecting...' : 'Registration successful! Redirecting...');
-      
-      // Use window.location for proper redirect with cookies
-      console.log('Redirecting to dashboard...');
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
+      if (isLogin) {
+        toast.success('Login successful! Redirecting...');
+        console.log('Redirecting to dashboard...');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+      } else {
+        toast.success('Registration successful! Please wait for admin approval.');
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          phone: '',
+          organizationName: '',
+        });
+        setIsLogin(true);
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message);
@@ -67,18 +81,46 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="input"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="input"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    className="input"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+              </>
             )}
 
             <div>
